@@ -29,7 +29,7 @@ exports.findOne = async (req, res, next) => {
       return res.send(document);
         }catch (error) { 
             return next( 
-                new ApiError( 500, 'Error retrieving contact with id=Vreq.params.id}' 
+                new ApiError( 500, 'Error retrieving contact with id=${req.params.id}'
         ) );
     }
 }; 
@@ -49,14 +49,47 @@ exports.update = async(req, res,next) => {
             }; 
         
 }; 
-exports.delete = (req, res) => { 
-    res.send({ message: "delete handler" });
+exports.delete = async(req, res,next) => {
+    try{
+        const contactService =new ContactService(MongoDB.client);
+        const document = await contactService.delete(req.params.id);
+        if(!document) {
+            return next(new ApiError(404, "Contact not found"));
+        }
+        return res.send({ message: "Contact was deleted successfully"});
+    } 
+    catch (error) {
+        return next(
+            new ApiError(500 ,'Could not delete contact with id=${rep.params.id}')
+        );
+    }
+    //res.send({ message: "delete handler" });
+}; 
+exports.deleteAll = async(_req, res, next) => {
+    try {
+        const contactService = new ContactService(MongoDB.client);
+        const deleteCount = await contactService.deleteAll();
+        return res.send({
+            message: '${deletedCount} contact were deleted successfully',
+        });
+    } catch (error){
+        return next(
+            new ApiError(500 ,"An error occurred while removing all contacts")
+        );
+    }
+    //res.send({ message: "deleteAll handler" }); 
 } ; 
-exports.deleteAll = (req, res) => { 
-    res.send({ message: "deleteAll handler" }); 
-} ; 
-exports.findAllFavorite = (req, res) => { 
-    res.send({ message: "findAllFavorite handler" }); 
+exports.findAllFavorite = async(_req, res,next) => {
+    try {
+        const contactService = new ContactService(MongoDB.client);
+        const documents = await contactService.findAllFavorite();
+        return res.send(documents);
+    } catch (error){
+        return next(
+            new ApiError( 500 ,"An error occurred while retrieving favorite contact")
+        );
+    }
+   // res.send({ message: "findAllFavorite handler" }); 
 };
 exports.create = async (req, res, next) => { 
     if (!req.body?.name) { 
